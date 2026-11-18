@@ -1,0 +1,18 @@
+{
+  "name": "VocabRecall — ฝึกคำศัพท์ภาษาอังกฤษอัจฉริยะ (Mac & iPad Sync)",
+  "short_name": "VocabRecall",
+  "description": "ระบบฝึกจำคำศัพท์ภาษาอังกฤษแบบเว้นระยะ (SRS) ตรวจคำพ้องเสียง หลายบริบท แปลทั้งประโยค และซิงค์ข้อมูลล่าสุดอัตโนมัติผ่าน Wi-Fi เดียวกัน",
+  "start_url": "./webapp.html",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "./app-logo.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

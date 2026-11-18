@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VocabRecall — ฝึกคำศัพท์ภาษาอังกฤษ • SRS • แปลทั้งประโยค • ซิงค์ Wi-Fi เดียวกัน</title>
+  <link rel="icon" href="./app-logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="./app-logo.png" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./styles.css?v=10" />
+</head>
+<body>
+  <!-- Top Header -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="./app-logo.png" alt="VocabRecall" class="brand-logo-img" />
+        <div>
+          <div class="brand-title">
+            VocabRecall
+            <span class="brand-badge">v10 • WebApp Edition</span>
+          </div>
+          <div style="font-size:0.76rem;color:#94A3B8;">
+            เปิดใช้งานอิสระจากทุกที่ (iPad / MacBook) • เช็คเวลาล่าสุดและซิงค์อัตโนมัติเมื่อต่อ Wi-Fi เดียวกัน (ไม่ใช้ iCloud)
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <!-- Same Wi-Fi Auto-Sync Status Pill -->
+        <button type="button" class="wifi-sync-pill" id="btnTopSyncPill" title="คลิกเพื่อดูสถานะการซิงค์ Wi-Fi">
+          <span class="sync-dot" id="syncDot"></span>
+          <span id="syncStatusText">กำลังตรวจสอบเครือข่าย...</span>
+          <span style="opacity:0.85;font-size:0.74rem;" id="syncPeerCountBadge"></span>
+        </button>
+
+        <!-- Force Refresh Button -->
+        <button type="button" class="wifi-sync-pill" id="btnForceReloadApp" style="background:rgba(99,102,241,0.22);border-color:rgba(129,140,248,0.45);">
+          <span>↻ รีเฟรชแอป</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Primary Navigation Bar -->
+  <nav class="primary-nav-wrap" aria-label="เมนูหลัก">
+    <div class="primary-nav-inner">
+      <div class="nav-tabs" role="tablist">
+        <button type="button" class="nav-tab-btn active" data-nav-view="quiz">
+          <span>🎯</span>
+          <span>ทบทวนคำศัพท์</span>
+          <span class="nav-tab-badge" id="navDueBadge">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" data-nav-view="add">
+          <span>➕</span>
+          <span>เพิ่มคำศัพท์ใหม่</span>
+        </button>
+        <button type="button" class="nav-tab-btn" data-nav-view="learning">
+          <span>⏳</span>
+          <span>กำลังฝึกจำ (SRS)</span>
+          <span class="nav-tab-badge" id="navLearningBadge">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" data-nav-view="mastered">
+          <span>🏆</span>
+          <span>คลังจำแม่นแล้ว</span>
+          <span class="nav-tab-badge" id="navMasteredBadge">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" data-nav-view="stats">
+          <span>📊</span>
+          <span>สถิติ &amp; จุดอ่อน</span>
+          <span class="nav-tab-badge" id="navLeechBadge">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" data-nav-view="sync">
+          <span>📡</span>
+          <span>ซิงค์ Wi-Fi &amp; ไฟล์</span>
+        </button>
+      </div>
+
+      <!-- Quick KPI Counters -->
+      <div class="top-kpi-strip">
+        <button type="button" class="kpi-mini-pill" id="kpiDueBtn" style="color:#D97706;border-color:#FDE68A;background:#FFFBEB;">
+          🔥 รอถาม: <span id="kpiDueCount">0</span>
+        </button>
+        <button type="button" class="kpi-mini-pill" id="kpiLearningBtn" style="color:#0284C7;border-color:#BAE6FD;background:#F0F9FF;">
+          ⏳ กำลังฝึก: <span id="kpiLearningCount">0</span>
+        </button>
+        <button type="button" class="kpi-mini-pill" id="kpiMasteredBtn" style="color:#059669;border-color:#A7F3D0;background:#ECFDF5;">
+          🏆 จำแม่น: <span id="kpiMasteredCount">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-container">
+    <!-- =================================================================
+         VIEW 1: ทบทวนและทดสอบคำศัพท์ (QUIZ & ACTIVE RECALL VIEW)
+         ================================================================= -->
+    <section class="view-section active" id="view-quiz">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🎯</span>
+            <span>โหมดทดสอบความจำและฝึกภาษาอังกฤษ (9 โหมด)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="badge-tag badge-amber" id="comboBadge">🔥 คอมโบ 0</span>
+            <span class="badge-tag badge-indigo" id="progressCounterBadge">ข้อ 1 / 1</span>
+            <button type="button" class="btn-secondary" id="btnShuffleQuiz" style="padding:6px 12px;font-size:0.82rem;">
+              🔀 สุ่มลำดับใหม่
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <!-- 1. Quiz Mode Selector (9 Modes) -->
+          <div style="margin-bottom:12px;">
+            <div style="font-size:0.78rem;font-weight:800;color:var(--text-secondary);margin-bottom:6px;">
+              รูปแบบคำถาม (เหมือนใน Mac + โหมดฝึกพูด &amp; วิทยุท่องศัพท์):
+            </div>
+            <div class="horizontal-scroll-bar" id="quizModeBar">
+              <button type="button" class="mode-pill-btn active" data-quiz-mode="choices4">🎯 4 ช้อยส์</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="sentence">📖 บริบทประโยค (+แปลทั้งประโยค)</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="listening">🎧 ฟังเสียง</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="spelling">✍️ สะกดคำ</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="reverse">🔄 ทายศัพท์</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="typing">⌨️ พิมพ์แปล (พ้องเสียง/หลายบริบท)</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="adaptive">🚀 ไต่ระดับ</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="speaking">🗣️ ฝึกพูดออกเสียง</button>
+              <button type="button" class="mode-pill-btn" data-quiz-mode="radioloop">📻 วิทยุท่องศัพท์</button>
+            </div>
+          </div>
+
+          <!-- 2. Category & Pool Filter Bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <div class="horizontal-scroll-bar" id="quizCategoryBar" style="flex:1;"></div>
+
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <select id="quizPoolSelect" class="form-input" style="width:auto;padding:7px 12px;font-size:0.84rem;">
+                <option value="due_or_learning">🔥 คำรอถาม + กำลังฝึก (SRS)</option>
+                <option value="leech_only">⚠️ เฉพาะคำที่ตอบผิดบ่อย (จุดอ่อน)</option>
+                <option value="mastered_only">🏆 ทบทวนคลังที่จำแม่นแล้ว</option>
+                <option value="all_words">🎲 สุ่มทุกคำในคลังทั้งหมด</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 3. Voice & Speed Control Bar -->
+          <div class="voice-toolbar">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:0.82rem;font-weight:800;color:var(--text-secondary);">🗣️ เสียงอ่าน:</span>
+              <select id="voiceSelect" class="form-input" style="width:auto;padding:5px 10px;font-size:0.82rem;max-width:210px;">
+                <option value="auto">🌟 สำเนียงชัดอัตโนมัติ (US/UK)</option>
+              </select>
+              <label style="display:inline-flex;align-items:center;gap:5px;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                <input type="checkbox" id="autoSpeakCheckbox" checked />
+                อ่านออกเสียงอัตโนมัติ
+              </label>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:0.8rem;font-weight:800;color:var(--text-secondary);">🐢 ความเร็วเสียง:</span>
+              <button type="button" class="speed-btn" data-speed="0.55">0.5x ช้ามาก</button>
+              <button type="button" class="speed-btn" data-speed="0.72">0.7x ช้าชัด</button>
+              <button type="button" class="speed-btn active" data-speed="0.88">0.85x ปกติ</button>
+              <button type="button" class="speed-btn" data-speed="1.0">1.0x เร็ว</button>
+              <button type="button" class="speed-btn" data-speed="1.18">1.2x เร็วมาก</button>
+            </div>
+          </div>
+
+          <!-- 4. Active Quiz Card Content -->
+          <div id="quizArenaContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         VIEW 2: เพิ่มคำศัพท์ใหม่ (SMART ADD VOCAB VIEW)
+         ================================================================= -->
+    <section class="view-section" id="view-add">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>➕</span>
+            <span>เพิ่มคำศัพท์ใหม่เข้าคลัง (พร้อมแต่งประโยค &amp; แปลไทยอัตโนมัติ)</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="addVocabForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">1. คำศัพท์ภาษาอังกฤษ (English Word / Phrase)</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="addWordInput" class="form-input" placeholder="เช่น Devoid, Resilient, Normalize..." required />
+                  <button type="button" class="btn-secondary" id="btnAutoFillDict" style="white-space:nowrap;">
+                    ✨ ดึงคำแปล &amp; แต่งประโยค
+                  </button>
+                  <button type="button" class="btn-secondary" id="btnSpeakPreviewAdd" title="ฟังเสียงอ่าน">
+                    🔊
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">2. หมวดหมู่คำศัพท์ (Category)</label>
+                <div class="horizontal-scroll-bar" id="addCategoryChips" style="margin-bottom:8px;"></div>
+                <input type="text" id="addCategoryInput" class="form-input" value="ทั่วไป" placeholder="เลือกด้านบน หรือพิมพ์ชื่อหมวดหมู่ใหม่..." />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">3. คำแปลภาษาไทย (รองรับหลายความหมาย/หลายบริบท คั่นด้วยเครื่องหมายจุลภาค , )</label>
+              <div id="dictSuggestionChips" class="horizontal-scroll-bar" style="margin-bottom:8px;"></div>
+              <input type="text" id="addMeaningsInput" class="form-input" placeholder="เช่น ปราศจาก, ไร้ซึ่ง, ไม่มีเลย" required />
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">4. ประโยคตัวอย่างภาษาอังกฤษ (Context Sentence)</label>
+                <input type="text" id="addExampleEnInput" class="form-input" placeholder="เช่น The remote desert plateau was completely devoid of water." />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">5. คำแปลทั้งประโยคภาษาไทย (Full Thai Sentence Translation)</label>
+                <input type="text" id="addExampleThInput" class="form-input" placeholder="เช่น ที่ราบสูงในทะเลทรายนั้นปราศจากน้ำโดยสิ้นเชิง" />
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">6. คำที่ใช้คู่กัน / โครงสร้างประโยค (Collocations &amp; Prepositions)</label>
+                <input type="text" id="addCollocationInput" class="form-input" placeholder="เช่น devoid of + Noun, resilient to..." />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">7. เริ่มถามทบทวนเมื่อไหร่?</label>
+                <select id="addInitialStageSelect" class="form-input">
+                  <option value="due_now">⚡ ถามทบทวนได้ทันที (SRS ระดับ 0)</option>
+                  <option value="wait_1h">⏰ รอแจ้งเตือนในอีก 1 ชั่วโมง</option>
+                  <option value="mastered">🏆 จำแม่นอยู่แล้ว (เก็บเข้าคลังจำแม่นเลย)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top:10px;display:flex;justify-content:flex-end;">
+              <button type="submit" class="btn-primary">
+                <span>💾 บันทึกคำศัพท์เข้าคลัง &amp; ซิงค์ Wi-Fi</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         VIEW 3: กำลังฝึกจำ (SRS LEARNING QUEUE)
+         ================================================================= -->
+    <section class="view-section" id="view-learning">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>⏳</span>
+            <span>กำลังฝึกจำ (SRS Queue ระดับ 0–4)</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" id="searchLearningInput" class="form-input" placeholder="🔍 ค้นหาคำศัพท์ หรือ คำแปล..." style="width:240px;padding:8px 14px;font-size:0.9rem;" />
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="horizontal-scroll-bar" id="learningCategoryBar" style="margin-bottom:14px;"></div>
+          <div id="learningListContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         VIEW 4: คลังคำศัพท์ที่จำแม่นแล้ว (MASTERED BANK)
+         ================================================================= -->
+    <section class="view-section" id="view-mastered">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🏆</span>
+            <span>คลังคำศัพท์ที่จำแม่นแล้ว (Mastered Bank)</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" id="searchMasteredInput" class="form-input" placeholder="🔍 ค้นหาในคลังจำแม่น..." style="width:240px;padding:8px 14px;font-size:0.9rem;" />
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="horizontal-scroll-bar" id="masteredCategoryBar" style="margin-bottom:14px;"></div>
+          <div id="masteredListContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         VIEW 5: สถิติความจำ & จุดอ่อน (STATS & LEECH WORDS)
+         ================================================================= -->
+    <section class="view-section" id="view-stats">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📊</span>
+            <span>สถิติความจำ • แยกตามระดับ SRS &amp; หมวดหมู่</span>
+          </div>
+          <button type="button" class="btn-primary" id="btnPracticeLeechNow" style="padding:9px 16px;font-size:0.88rem;">
+            🎯 ฝึกซ่อมเฉพาะคำที่ผิดบ่อยทันที
+          </button>
+        </div>
+        <div class="panel-body">
+          <div id="statsDashboardContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         VIEW 6: ซิงค์ Wi-Fi & จัดการไฟล์ Excel/CSV (SYNC & IMPORT/EXPORT)
+         ================================================================= -->
+    <section class="view-section" id="view-sync">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📡</span>
+            <span>การเชื่อมต่อ MacBook ⇄ iPad อัตโนมัติเมื่อต่อ Wi-Fi เดียวกัน (ไม่ใช้ iCloud)</span>
+          </div>
+          <button type="button" class="btn-primary" id="btnForceSyncNow" style="padding:9px 16px;font-size:0.88rem;">
+            🔄 ซิงค์ข้อมูลล่าสุดเดี๋ยวนี้
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid" style="align-items:center;">
+            <div>
+              <div style="background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:18px;padding:18px;margin-bottom:14px;">
+                <div style="font-size:0.84rem;font-weight:800;color:#4F46E5;margin-bottom:4px;">
+                  🌐 ลิงก์ WebApp ถาวร (เปิดได้ทุกที่ทั้งบน iPad และ MacBook):
+                </div>
+                <div id="permanentWebAppUrlBox" style="font-family:monospace;font-size:1.02rem;font-weight:900;color:#1E1B4B;word-break:break-all;margin-bottom:10px;">
+                  https://potae13.github.io/vocabrecall/webapp.html
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-secondary" id="btnCopyCloudUrl">📋 คัดลอกลิงก์ WebApp</button>
+                  <button type="button" class="btn-secondary" id="btnCopyLanUrl">🏠 คัดลอกลิงก์ Local MacBook</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">รหัสห้องซิงค์ในวง Wi-Fi เดียวกัน (Sync Room Code — ตั้งให้ตรงกันระหว่าง Mac กับ iPad)</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="syncRoomCodeInput" class="form-input" value="VR-8899" style="max-width:200px;" />
+                  <button type="button" class="btn-secondary" id="btnSaveRoomCode">💾 บันทึกรหัสห้องซิงค์</button>
+                </div>
+              </div>
+
+              <div id="connectedPeersBox" style="margin-top:12px;"></div>
+            </div>
+
+            <div style="text-align:center;background:#F8FAFC;border:1.5px solid var(--border-color);border-radius:20px;padding:20px;">
+              <div style="font-weight:800;font-size:0.95rem;margin-bottom:10px;">📱 สแกน QR Code เพื่อเปิดบน iPad</div>
+              <img id="syncQrImg" alt="QR Code" style="width:190px;height:190px;border-radius:16px;border:1px solid var(--border-color);background:#fff;padding:10px;" />
+              <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:8px;">
+                ใน Safari บน iPad กด <b>แชร์ (Share) → เพิ่มไปยังหน้าจอโฮม (Add to Home Screen)</b>
+              </div>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border-color);margin:22px 0;" />
+
+          <!-- Import / Export CSV & JSON -->
+          <div>
+            <div style="font-size:1.05rem;font-weight:800;margin-bottom:12px;">
+              📊 นำเข้าและส่งออกไฟล์คำศัพท์ (Excel .CSV / Backup .JSON)
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="btn-secondary" id="btnExportCsv">📥 ส่งออกตารางคำศัพท์ (.CSV เปิดใน Excel)</button>
+              <button type="button" class="btn-secondary" id="btnExportJson">💾 สำรองฐานข้อมูลทั้งหมด (.JSON)</button>
+              <label class="btn-secondary" style="cursor:pointer;">
+                📤 นำเข้าไฟล์ .CSV หรือ .JSON
+                <input type="file" id="importFileInput" accept=".csv,.json" style="display:none;" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit Word Modal -->
+  <div class="modal-backdrop" id="editVocabModalBackdrop">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="font-size:1.2rem;font-weight:900;">✏️ แก้ไขข้อมูลคำศัพท์</h3>
+        <button type="button" class="btn-secondary" id="btnCloseEditModal" style="padding:6px 12px;">✕ ปิด</button>
+      </div>
+      <form id="editVocabForm">
+        <input type="hidden" id="editIdInput" />
+        <div class="form-group">
+          <label class="form-label">คำศัพท์ภาษาอังกฤษ</label>
+          <input type="text" id="editWordInput" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">คำแปลภาษาไทย (คั่นหลายความหมายด้วย , )</label>
+          <input type="text" id="editMeaningsInput" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมวดหมู่</label>
+          <input type="text" id="editCategoryInput" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">ประโยคตัวอย่างภาษาอังกฤษ</label>
+          <input type="text" id="editExampleEnInput" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">คำแปลทั้งประโยคภาษาไทย</label>
+          <input type="text" id="editExampleThInput" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">คำที่ใช้คู่กัน (Collocations)</label>
+          <input type="text" id="editCollocationInput" class="form-input" />
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+          <button type="submit" class="btn-primary">💾 บันทึกการแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bottom Tabbar for iPad / Mobile -->
+  <nav class="bottom-app-tabbar" aria-label="เมนูด้านล่าง">
+    <button type="button" class="bottom-tab-item active" data-nav-view="quiz">
+      <span style="font-size:1.25rem;">🎯</span>
+      <span>ทบทวน</span>
+    </button>
+    <button type="button" class="bottom-tab-item" data-nav-view="add">
+      <span style="font-size:1.25rem;">➕</span>
+      <span>เพิ่มศัพท์</span>
+    </button>
+    <button type="button" class="bottom-tab-item" data-nav-view="learning">
+      <span style="font-size:1.25rem;">⏳</span>
+      <span>กำลังฝึก</span>
+    </button>
+    <button type="button" class="bottom-tab-item" data-nav-view="mastered">
+      <span style="font-size:1.25rem;">🏆</span>
+      <span>จำแม่น</span>
+    </button>
+    <button type="button" class="bottom-tab-item" data-nav-view="stats">
+      <span style="font-size:1.25rem;">📊</span>
+      <span>สถิติ</span>
+    </button>
+    <button type="button" class="bottom-tab-item" data-nav-view="sync">
+      <span style="font-size:1.25rem;">📡</span>
+      <span>ซิงค์ Wi-Fi</span>
+    </button>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="./app.js?v=10"></script>
+</body>
+</html>
